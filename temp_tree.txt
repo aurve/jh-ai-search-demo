@@ -1,0 +1,43 @@
+PROJECT DIRECTORY STRUCTURE
+===========================
+
+c:\Users\Clark\jh-ai-search-demo/
+├── .env                                    (149 bytes)
+├── package.json                            (453 bytes)
+├── package-lock.json                       (49 KB)
+├── config.js                               (0 bytes - empty)
+│
+├── client/
+│   ├── package.json                        (871 bytes)
+│   ├── package-lock.json                   (640 KB)
+│   ├── README.md                           (3.3 KB)
+│   ├── .gitignore                          (310 bytes)
+│   ├── public/
+│   └── src/
+│       ├── App.js                          (2.4 KB)
+│       ├── App.test.js                     (246 bytes)
+│       ├── App.css                         (564 bytes)
+│       ├── index.js                        (535 bytes)
+│       ├── index.css                       (366 bytes)
+│       ├── setupTests.js                   (241 bytes)
+│       ├── reportWebVitals.js              (362 bytes)
+│       └── logo.svg                        (2.6 KB)
+│
+├── server/
+│   ├── index.js                            (413 bytes)
+│   ├── createCollection.js                 (366 bytes)
+│   ├── importDocuments.js                  (394 bytes)
+│   │
+│   ├── routes/
+│   │   └── search.js                       (727 bytes)
+│   │
+│   ├── services/
+│   │   ├── search.js                       (355 bytes)
+│   │   ├── typesense.js                    (264 bytes)
+│   │   └── grokQueryAnalysis.js            (439 bytes)
+│   │
+│   └── data/
+│       ├── schema.js                       (605 bytes)
+│       └── documents.json                  (811 bytes)
+│
+└── node_modules/                           (installed dependencies)

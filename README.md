@@ -1,5 +1,66 @@
 # Just Holistics AI Search & Moderation Demo
 
+---
+
+# Getting Started
+
+## Prerequisites
+
+- Node.js 18+
+- Docker (for Typesense)
+- A Grok API key from [x.ai](https://x.ai)
+
+## 1. Install dependencies
+
+```bash
+npm install
+cd client && npm install && cd ..
+```
+
+## 2. Configure environment
+
+Create a `.env` file in the project root:
+
+```
+TYPESENSE_API_KEY=your_typesense_key
+GROK_API_KEY=your_grok_api_key
+```
+
+## 3. Start Typesense
+
+```bash
+docker run -d \
+  -p 8108:8108 \
+  -v typesense-data:/data \
+  typesense/typesense:27.0 \
+  --data-dir /data \
+  --api-key=your_typesense_key \
+  --enable-cors
+```
+
+## 4. Seed the collection
+
+```bash
+npx ts-node server/createCollection.ts
+npx ts-node server/importDocuments.ts
+```
+
+## 5. Start the server
+
+```bash
+npm run dev
+```
+
+## 6. Start the client
+
+```bash
+cd client && npm start
+```
+
+The app runs at `http://localhost:3000`. The API runs at `http://localhost:5000`.
+
+---
+
 AI-powered wellness search platform built with:
 - React + TypeScript frontend
 - Express + TypeScript backend

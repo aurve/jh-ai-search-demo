@@ -28,7 +28,7 @@
   {
     "id": "3",
     "content_type": "practitioner",
-    "title": "Functional Medicineee Sleep Specialist",
+    "title": "Functional Medicine Sleep Specialist",
     "body": "Specialises in identifying root causes of sleep disruption through functional testing, gut-brain axis assessment, and personalised wellness protocols.",
     "tags": ["sleep", "functional-medicine", "testing"],
     "category": "wellness",
@@ -154,7 +154,33 @@
     "deep_link": "/protocols/post-surgery-support",
     "moderation_status": "requires_review",
     "risk_score": 72
-  }
+  },
+  {
+  "id": "13",
+  "content_type": "community",
+  "title": "Alternative Wellness Discussions Around Fenbendazole",
+  "body": "Community members discuss alternative wellness conversations involving fenbendazole and cancer-related experiences. Posts are informational only and do not replace professional medical guidance.",
+  "tags": ["fenbendazole", "cancer", "alternative-wellness"],
+  "category": "high-risk wellness",
+  "author_type": "community_member",
+  "created_at": 1717007000,
+  "deep_link": "/community/fenbendazole-discussion",
+  "moderation_status": "requires_review",
+  "risk_score": 85
+},
+{
+  "id": "14",
+  "content_type": "practitioner",
+  "title": "Integrative Oncology Wellness Practitioner",
+  "body": "Provides supportive wellness guidance for individuals navigating cancer recovery, stress reduction, sleep support, and lifestyle balance alongside professional medical care.",
+  "tags": ["oncology", "recovery", "wellness"],
+  "category": "integrative wellness",
+  "author_type": "practitioner",
+  "created_at": 1717007500,
+  "deep_link": "/practitioners/integrative-oncology",
+  "moderation_status": "approved",
+  "risk_score": 20
+}
     
   
 ]

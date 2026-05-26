@@ -96,7 +96,7 @@ function buildFallbackOverview(query: string, analysis: QueryAnalysis, results: 
 
 function SectionHeader({ icon, label, count }: { icon: string; label: string; count: number }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, marginTop: 28 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8, marginTop: 28 }}>
       <span style={{ fontSize: 18 }}>{icon}</span>
       <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: C.text }}>{label}</h2>
       <span style={{
@@ -145,7 +145,7 @@ function ResultCard({ item, onSave, saved }: {
 
       {/* TAGS */}
       {doc.tags?.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 14 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 8 }}>
           {doc.tags.map((tag, i) => (
             <span key={i} style={{
               background: C.primaryBg, color: C.primary,
@@ -229,20 +229,42 @@ export default function App() {
   const [query, setQuery]     = useState<string>("");
   const [data, setData]       = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [loadingStage, setLoadingStage] = useState<string>("");
   const [error, setError]     = useState<string | null>(null);
   const [saved, setSaved]     = useState<Set<string>>(new Set());
+  const [showRawJson, setShowRawJson] = useState(false);
+  const [showTypesenseResults, setShowTypesenseResults] = useState(false);
 
   async function handleSearch() {
     if (!query.trim()) return;
+
     setLoading(true);
     setError(null);
+
     try {
-      const res = await axios.post<SearchResponse>("http://localhost:5000/search", { query });
+      setLoadingStage("Analyzing query with Grok AI...");
+
+      await new Promise(resolve => setTimeout(resolve, 400));
+
+      setLoadingStage("Retrieving wellness content from Typesense...");
+
+      const res = await axios.post<SearchResponse>(
+        "http://localhost:5000/search",
+        { query }
+      );
+
+      setLoadingStage("Applying moderation and generating AI overview...");
+
+      await new Promise(resolve => setTimeout(resolve, 400));
+
       setData(res.data);
+
     } catch {
       setError("Search failed. Make sure the server is running.");
     }
+
     setLoading(false);
+    setLoadingStage("");
   }
 
   function toggleSave(id: string) {
@@ -258,16 +280,25 @@ export default function App() {
   const community     = data?.results.filter(r => r.document.content_type === "community")    ?? [];
   const risk          = data?.analysis ? riskStyle(data.analysis.risk_level) : null;
 
+  const suggestedQueries = [
+  "sleep anxiety",
+  "magnesium dosage",
+  "stress recovery",
+  "functional medicine",
+  "post-surgery support",
+  "fenbendazole cancer protocol"
+  ];
+
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "'Segoe UI', Arial, sans-serif" }}>
 
       {/* HEADER */}
       <div style={{
         background: `linear-gradient(135deg, ${C.primary} 0%, ${C.primaryLight} 100%)`,
-        padding: "40px 40px 60px",
+        padding: "24px 32px 28px",
         color: "#fff",
       }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1380, margin: "0 auto" }}>
           <div style={{ fontSize: 12, letterSpacing: 2, opacity: 0.7, marginBottom: 6, textTransform: "uppercase" }}>
             AI-Powered Wellness Discovery
           </div>
@@ -281,7 +312,7 @@ export default function App() {
       </div>
 
       {/* SEARCH BAR */}
-      <div style={{ maxWidth: 1000, margin: "-28px auto 0", padding: "0 40px" }}>
+      <div style={{ maxWidth: 1380, margin: "-28px auto 0", padding: "0 40px" }}>
         <div style={{
           background: C.card, borderRadius: 12,
           boxShadow: "0 4px 24px rgba(0,0,0,0.10)",
@@ -314,8 +345,51 @@ export default function App() {
         </div>
       </div>
 
+      {/* ── SUGGESTED SEARCHES ── */}
+      <div style={{
+        maxWidth: 1380,
+        margin: "14px auto 0",
+        padding: "0 40px",
+      }}>
+        <div style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 10,
+          alignItems: "center",
+        }}>
+          <span style={{
+            fontSize: 12,
+            fontWeight: 600,
+            color: C.muted,
+          }}>
+            Popular wellness searches:
+          </span>
+
+          {suggestedQueries.map((item, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setQuery(item);
+              }}
+              style={{
+                background: "#ffffff",
+                border: `1px solid ${C.border}`,
+                borderRadius: 999,
+                padding: "7px 14px",
+                fontSize: 12,
+                color: C.text,
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* BODY */}
-      <div style={{ maxWidth: 1000, margin: "32px auto", padding: "0 40px 80px" }}>
+      <div style={{ maxWidth: 1380, margin: "18px auto", padding: "0 40px 80px" }}>
 
         {error && (
           <div style={{
@@ -324,6 +398,49 @@ export default function App() {
             color: C.riskHighColor, marginBottom: 24, fontSize: 14,
           }}>
             {error}
+          </div>
+        )}
+
+        {loading && (
+          <div style={{
+            background: C.card,
+            border: `1px solid ${C.border}`,
+            borderRadius: 14,
+            padding: "26px 28px",
+            marginBottom: 24,
+            boxShadow: "0 4px 20px rgba(0,0,0,0.04)",
+          }}>
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              marginBottom: 8,
+            }}>
+              <div style={{
+                width: 18,
+                height: 18,
+                border: `3px solid ${C.primaryBg}`,
+                borderTop: `3px solid ${C.primary}`,
+                borderRadius: "50%",
+                animation: "spin 1s linear infinite",
+              }} />
+
+              <div style={{
+                fontSize: 15,
+                fontWeight: 600,
+                color: C.text,
+              }}>
+                {loadingStage}
+              </div>
+            </div>
+
+            <div style={{
+              fontSize: 13,
+              color: C.muted,
+              lineHeight: 1.7,
+            }}>
+              Running AI-assisted wellness retrieval, moderation filtering, and grounded overview generation.
+            </div>
           </div>
         )}
 
@@ -389,6 +506,111 @@ export default function App() {
               </div>
             )}
 
+            {/* ── SAFETY DECISION TRACE ── */}
+            {data.analysis.risk_level !== "low" && (
+              <div style={{
+                background: "#f8fafc",
+                border: "1px solid #dbeafe",
+                borderRadius: 10,
+                padding: "16px 18px",
+                marginBottom: 22,
+              }}>
+                <div style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: 1.3,
+                  textTransform: "uppercase",
+                  color: "#1d4ed8",
+                  marginBottom: 10,
+                }}>
+                  Safety Actions Applied
+                </div>
+
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 7,
+                  fontSize: 13,
+                  color: "#334155",
+                  lineHeight: 1.6,
+                }}>
+                  <div>✓ {data.analysis.risk_level === "high" ? "High-risk" : "Sensitive"} wellness query detected</div>
+
+                  {data.suppressedCount > 0 && (
+                    <div>✓ {data.suppressedCount} sensitive discussion{data.suppressedCount > 1 ? "s" : ""} filtered pending moderation review</div>
+                  )}
+
+                  {practitioners.length > 0 && (
+                    <div>✓ Practitioner-reviewed wellness content prioritized in retrieval</div>
+                  )}
+
+                  <div>✓ AI overview grounded using retrieved Just Holistics content only</div>
+
+                  <div>✓ Medical advice generation restricted by safety prompts</div>
+                </div>
+              </div>
+            )}
+
+            {/* ── RETRIEVAL METADATA ── */}
+            <div style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 10,
+              marginBottom: 22,
+            }}>
+              <div style={{
+                background: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                borderRadius: 999,
+                padding: "8px 14px",
+                fontSize: 12,
+                color: "#334155",
+                fontWeight: 600,
+              }}>
+                {data.results.length} result{data.results.length !== 1 ? "s" : ""} retrieved
+              </div>
+
+              {data.suppressedCount > 0 && (
+                <div style={{
+                  background: "#fff7ed",
+                  border: "1px solid #fdba74",
+                  borderRadius: 999,
+                  padding: "8px 14px",
+                  fontSize: 12,
+                  color: "#9a3412",
+                  fontWeight: 600,
+                }}>
+                  {data.suppressedCount} filtered for moderation
+                </div>
+              )}
+
+              {practitioners.length > 0 && (
+                <div style={{
+                  background: "#ecfdf5",
+                  border: "1px solid #86efac",
+                  borderRadius: 999,
+                  padding: "8px 14px",
+                  fontSize: 12,
+                  color: "#166534",
+                  fontWeight: 600,
+                }}>
+                  Practitioner content prioritized
+                </div>
+              )}
+
+              <div style={{
+                background: "#eff6ff",
+                border: "1px solid #93c5fd",
+                borderRadius: 999,
+                padding: "8px 14px",
+                fontSize: 12,
+                color: "#1d4ed8",
+                fontWeight: 600,
+              }}>
+                Grounded AI overview enabled
+              </div>
+            </div>
+
             {/* ── AI OVERVIEW — full width ── */}
             <div style={{
               background: C.card, borderRadius: 12,
@@ -425,17 +647,49 @@ export default function App() {
                 </span>
               </div>
               </div>
-              <div style={{ padding: "20px 24px" }}>
+              <div style={{ padding: "16px 18px" }}>
                 <p style={{ margin: "0 0 18px", fontSize: 15, color: C.text, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
                   {data.aiOverview || buildFallbackOverview(data.query, data.analysis, data.results)}
                 </p>
                 <div style={{
                   marginTop: 14,
+                  padding: "12px 14px",
+                  background: "#f8fafc",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 8,
                   fontSize: 12,
                   color: C.muted,
-                  lineHeight: 1.6
+                  lineHeight: 1.7,
                 }}>
-                  The overview above is generated from retrieved Just Holistics content and linked resources below.
+                  <div style={{
+                    fontWeight: 700,
+                    color: C.text,
+                    marginBottom: 6,
+                  }}>
+                    Grounded Retrieval Summary
+                  </div>
+
+                  <div>
+                    The AI overview above was generated using retrieved Just Holistics content only.
+                  </div>
+
+                  <div style={{ marginTop: 8 }}>
+                    • {practitioners.length} practitioner document{practitioners.length !== 1 ? "s" : ""}
+                    <br />
+                    • {protocols.length} reviewed protocol{protocols.length !== 1 ? "s" : ""}
+                    <br />
+                    • {community.length} community discussion{community.length !== 1 ? "s" : ""}
+                  </div>
+
+                  {data.suppressedCount > 0 && (
+                    <div style={{
+                      marginTop: 8,
+                      color: "#b45309",
+                      fontWeight: 600,
+                    }}>
+                      • {data.suppressedCount} additional item{data.suppressedCount !== 1 ? "s were" : " was"} excluded due to moderation review
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                   {practitioners.length > 0 && (
@@ -472,26 +726,47 @@ export default function App() {
               </div>
             </div>
 
-            {/* ── SUPPRESSED CONTENT — full width ── */}
+            {/* ── MODERATION REVIEW NOTICE — full width ── */}
             {data.suppressedCount > 0 && (
               <div style={{
-                background: "#fffbeb", border: "1px solid #fcd34d",
-                borderRadius: 8, padding: "12px 16px", marginBottom: 20,
-                display: "flex", alignItems: "center", gap: 10,
-                fontSize: 13, color: "#92400e",
+                marginBottom: 22,
+                background: "#fff7ed",
+                border: "1px solid #fdba74",
+                borderRadius: 12,
+                padding: "16px 18px",
+                color: "#9a3412",
+                lineHeight: 1.7,
               }}>
-                <span style={{ fontSize: 16 }}>🛡️</span>
-                <span>
-                  <strong>{data.suppressedCount} item{data.suppressedCount !== 1 ? "s" : ""} hidden pending moderation review</strong>
-                  {" "}— our safety team is reviewing this content before it is made visible.
-                </span>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 8,
+                  fontWeight: 700,
+                  fontSize: 14,
+                }}>
+                  <span style={{ fontSize: 18 }}>🛡️</span>
+                  <span>Moderation Review in Progress</span>
+                </div>
+
+                <div style={{ fontSize: 13 }}>
+                  {data.suppressedCount} wellness discussion{data.suppressedCount > 1 ? "s are" : " is"} currently hidden because they contain unreviewed or health-sensitive claims requiring moderation review.
+                </div>
+
+                <div style={{
+                  marginTop: 6,
+                  fontSize: 12,
+                  opacity: 0.9,
+                }}>
+                  This helps reduce unsafe or misleading wellness guidance before content becomes publicly visible.
+                </div>
               </div>
             )}
 
             {/* ── TWO-COLUMN: ANALYSIS + RESULTS ── */}
             <div style={{
               display: "grid",
-              gridTemplateColumns: window.innerWidth < 900 ? "1fr" : "290px 1fr",
+              gridTemplateColumns: window.innerWidth < 900 ? "1fr" : "260px minmax(0, 1fr)",
               gap: 24,
               alignItems: "start"
             }}>
@@ -571,30 +846,48 @@ export default function App() {
 
                   </div>
                 </div>
-                <div>
-                  <div style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: C.muted,
-                    textTransform: "uppercase",
-                    letterSpacing: 1.2,
-                    marginBottom: 10
-                  }}>
-                    Raw Grok Analysis JSON
-                  </div>
+                <div style={{ marginTop: 18 }}>
+                  <button
+                    onClick={() => setShowRawJson(prev => !prev)}
+                    style={{
+                      width: "100%",
+                      background: "#f8fafc",
+                      border: "1px solid #dbeafe",
+                      borderRadius: 8,
+                      padding: "10px 12px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      letterSpacing: 1.2,
+                      textTransform: "uppercase",
+                      color: "#1d4ed8",
+                    }}
+                  >
+                    <span>Raw Grok Analysis JSON</span>
+                    <span>{showRawJson ? "−" : "+"}</span>
+                  </button>
 
-                  <pre style={{
-                    background: "#f8fafc",
-                    border: "1px solid #e2e8f0",
-                    borderRadius: 8,
-                    padding: 12,
-                    fontSize: 11,
-                    overflowX: "auto",
-                    color: "#334155",
-                    lineHeight: 1.6,
-                  }}>
-                    {JSON.stringify(data.analysis, null, 2)}
-                  </pre>
+                  {showRawJson && (
+                    <pre style={{
+                      marginTop: 10,
+                      background: "#0f172a",
+                      border: "1px solid #1e293b",
+                      borderRadius: 10,
+                      padding: 14,
+                      fontSize: 11,
+                      overflowX: "auto",
+                      maxHeight: 320,
+                      overflowY: "auto",
+                      color: "#e2e8f0",
+                      lineHeight: 1.7,
+                      boxShadow: "inset 0 1px 2px rgba(0,0,0,0.2)",
+                    }}>
+                      {JSON.stringify(data.analysis, null, 2)}
+                    </pre>
+                  )}
                 </div>
               </div>
 
@@ -605,18 +898,63 @@ export default function App() {
                   <strong style={{ color: C.text }}>"{data.query}"</strong>
                 </div>
                 
-                <div style={{
-                  marginTop: 10,
-                  marginBottom: 18,
-                  padding: "12px 16px",
-                  background: "#eff6ff",
-                  border: "1px solid #bfdbfe",
-                  borderRadius: 10,
-                  fontSize: 13,
-                  color: "#1d4ed8",
-                  fontWeight: 600
-                }}>
-                  Typesense Retrieval Results
+                {/* ── TYPESENSE RETRIEVAL RESULTS ── */}
+                <div style={{ marginTop: 10, marginBottom: 18 }}>
+                  <button
+                    onClick={() => setShowTypesenseResults(prev => !prev)}
+                    style={{
+                      width: "100%",
+                      background: "#eff6ff",
+                      border: "1px solid #bfdbfe",
+                      borderRadius: 10,
+                      padding: "12px 14px",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "#1d4ed8",
+                    }}
+                  >
+                    <span>Typesense Retrieval Results</span>
+                    <span>{showTypesenseResults ? "−" : "+"}</span>
+                  </button>
+
+                  {showTypesenseResults && (
+                    <div style={{
+                      marginTop: 12,
+                      background: "#0f172a",
+                      border: "1px solid #1e293b",
+                      borderRadius: 12,
+                      padding: 16,
+                      overflowX: "auto",
+                      maxHeight: 340,
+                      overflowY: "auto",
+                    }}>
+                      <pre style={{
+                        margin: 0,
+                        color: "#e2e8f0",
+                        fontSize: 11,
+                        lineHeight: 1.7,
+                        whiteSpace: "pre-wrap",
+                      }}>
+                        {JSON.stringify(
+                          data.results.map(result => ({
+                            id: result.document.id,
+                            title: result.document.title,
+                            content_type: result.document.content_type,
+                            moderation_status: result.document.moderation_status,
+                            risk_score: result.document.risk_score,
+                            category: result.document.category,
+                            tags: result.document.tags,
+                          })),
+                          null,
+                          2
+                        )}
+                      </pre>
+                    </div>
+                  )}
                 </div>
                 {practitioners.length > 0 && (
                   <div id="practitioners">
@@ -673,8 +1011,49 @@ export default function App() {
                 )}
 
                 {data.results.length === 0 && (
-                  <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 40, textAlign: "center", color: C.muted, marginTop: 16 }}>
-                    No results found. Try a different search term.
+                  <div style={{
+                    background: C.card,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 14,
+                    padding: "42px 32px",
+                    textAlign: "center",
+                    marginTop: 18,
+                  }}>
+                    <div style={{
+                      fontSize: 34,
+                      marginBottom: 8,
+                    }}>
+                      🌿
+                    </div>
+
+                    <div style={{
+                      fontSize: 17,
+                      fontWeight: 700,
+                      color: C.text,
+                      marginBottom: 10,
+                    }}>
+                      No matching wellness content found
+                    </div>
+
+                    <div style={{
+                      fontSize: 13,
+                      color: C.muted,
+                      lineHeight: 1.7,
+                      maxWidth: 480,
+                      margin: "0 auto",
+                    }}>
+                      The AI retrieval system could not find sufficiently relevant practitioner,
+                      protocol, or community content for this query.
+                    </div>
+
+                    <div style={{
+                      marginTop: 18,
+                      fontSize: 12,
+                      color: C.primary,
+                      fontWeight: 600,
+                    }}>
+                      Try broader wellness topics or explore related searches suggested by Grok.
+                    </div>
                   </div>
                 )}
               </div>

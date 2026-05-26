@@ -179,6 +179,7 @@ Example:
     "sleep practitioner"
   ]
 }
+```
 
 ---
 
@@ -188,3 +189,5 @@ During implementation, the provided Grok API credentials
 appeared unavailable/inaccessible. The architecture and
 integration layer were still fully implemented and tested
 using fallback-compatible configurations.
+
+--- 

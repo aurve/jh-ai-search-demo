@@ -1,6 +1,10 @@
 import { useState } from "react";
 import axios from "axios";
 
+const API_URL = "http://localhost:5000/search";
+const MAX_WIDTH = 1380;
+const LOADING_DELAY_MS = 400;
+
 interface ContentDocument {
   id: string;
   title: string;
@@ -48,6 +52,20 @@ const C = {
   border:        "#e2e8e5",
   text:          "#1a2e25",
   muted:         "#5a7065",
+  borderGreen:   "#b7dfc9",
+  blue:          "#1d4ed8",
+  blueBg:        "#eff6ff",
+  blueBorder:    "#bfdbfe",
+  purple:        "#7c3aed",
+  slate:         "#f8fafc",
+  slateBorder:   "#e2e8f0",
+  slateDark:     "#334155",
+  slateBlue:     "#dbeafe",
+  codeBg:        "#0f172a",
+  codeBorder:    "#1e293b",
+  warningBg:     "#fff7ed",
+  warningBorder: "#fdba74",
+  warningText:   "#9a3412",
   riskHighColor: "#dc2626",
   riskHighBg:    "#fef2f2",
   riskMedColor:  "#d97706",
@@ -65,8 +83,8 @@ function riskStyle(level: string) {
 function typeBadgeColor(type: string) {
   const map: Record<string, string> = {
     practitioner: C.primary,
-    protocol:     "#1d4ed8",
-    community:    "#7c3aed",
+    protocol:     C.blue,
+    community:    C.purple,
   };
   return map[type] ?? "#6b7280";
 }
@@ -100,7 +118,7 @@ function SectionHeader({ icon, label, count }: { icon: string; label: string; co
       <span style={{ fontSize: 18 }}>{icon}</span>
       <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: C.text }}>{label}</h2>
       <span style={{
-        background: C.primaryBg, color: C.primary, border: `1px solid #b7dfc9`,
+        background: C.primaryBg, color: C.primary, border: `1px solid ${C.borderGreen}`,
         borderRadius: 20, padding: "1px 10px", fontSize: 12, fontWeight: 600,
       }}>{count}</span>
     </div>
@@ -197,7 +215,7 @@ function ResultCard({ item, onSave, saved }: {
             style={{
               background: saved ? C.primaryBg : C.primary,
               color: saved ? C.primary : "#fff",
-              border: saved ? `1px solid #b7dfc9` : "none",
+              border: saved ? `1px solid ${C.borderGreen}` : "none",
               borderRadius: 6, padding: "7px 14px",
               fontSize: 12, fontWeight: 600, cursor: "pointer",
             }}
@@ -211,7 +229,7 @@ function ResultCard({ item, onSave, saved }: {
             target="_blank"
             rel="noreferrer"
             style={{
-              background: "#7c3aed", color: "#fff",
+              background: C.purple, color: "#fff",
               border: "none", borderRadius: 6,
               padding: "7px 14px", fontSize: 12, fontWeight: 600,
               textDecoration: "none", cursor: "pointer",
@@ -244,18 +262,15 @@ export default function App() {
     try {
       setLoadingStage("Analyzing query with Grok AI...");
 
-      await new Promise(resolve => setTimeout(resolve, 400));
+      await new Promise(resolve => setTimeout(resolve, LOADING_DELAY_MS));
 
       setLoadingStage("Retrieving wellness content from Typesense...");
 
-      const res = await axios.post<SearchResponse>(
-        "http://localhost:5000/search",
-        { query }
-      );
+      const res = await axios.post<SearchResponse>(API_URL, { query });
 
       setLoadingStage("Applying moderation and generating AI overview...");
 
-      await new Promise(resolve => setTimeout(resolve, 400));
+      await new Promise(resolve => setTimeout(resolve, LOADING_DELAY_MS));
 
       setData(res.data);
 
@@ -281,12 +296,12 @@ export default function App() {
   const risk          = data?.analysis ? riskStyle(data.analysis.risk_level) : null;
 
   const suggestedQueries = [
-  "sleep anxiety",
-  "magnesium dosage",
-  "stress recovery",
-  "functional medicine",
-  "post-surgery support",
-  "fenbendazole cancer protocol"
+    "sleep anxiety",
+    "magnesium dosage",
+    "stress recovery",
+    "functional medicine",
+    "post-surgery support",
+    "fenbendazole cancer protocol"
   ];
 
   return (
@@ -298,7 +313,7 @@ export default function App() {
         padding: "24px 32px 28px",
         color: "#fff",
       }}>
-        <div style={{ maxWidth: 1380, margin: "0 auto" }}>
+        <div style={{ maxWidth: MAX_WIDTH, margin: "0 auto" }}>
           <div style={{ fontSize: 12, letterSpacing: 2, opacity: 0.7, marginBottom: 6, textTransform: "uppercase" }}>
             AI-Powered Wellness Discovery
           </div>
@@ -312,7 +327,7 @@ export default function App() {
       </div>
 
       {/* SEARCH BAR */}
-      <div style={{ maxWidth: 1380, margin: "-28px auto 0", padding: "0 40px" }}>
+      <div style={{ maxWidth: MAX_WIDTH, margin: "-28px auto 0", padding: "0 40px" }}>
         <div style={{
           background: C.card, borderRadius: 12,
           boxShadow: "0 4px 24px rgba(0,0,0,0.10)",
@@ -347,7 +362,7 @@ export default function App() {
 
       {/* ── SUGGESTED SEARCHES ── */}
       <div style={{
-        maxWidth: 1380,
+        maxWidth: MAX_WIDTH,
         margin: "14px auto 0",
         padding: "0 40px",
       }}>
@@ -389,7 +404,7 @@ export default function App() {
       </div>
 
       {/* BODY */}
-      <div style={{ maxWidth: 1380, margin: "18px auto", padding: "0 40px 80px" }}>
+      <div style={{ maxWidth: MAX_WIDTH, margin: "18px auto", padding: "0 40px 80px" }}>
 
         {error && (
           <div style={{
@@ -484,6 +499,7 @@ export default function App() {
                 {data.query}
               </div>
             </div>
+
             {/* ── SAFETY BANNER — full width ── */}
             {(data.analysis.risk_level === "high" || data.analysis.risk_level === "medium") && (
               <div style={{
@@ -509,8 +525,8 @@ export default function App() {
             {/* ── SAFETY DECISION TRACE ── */}
             {data.analysis.risk_level !== "low" && (
               <div style={{
-                background: "#f8fafc",
-                border: "1px solid #dbeafe",
+                background: C.slate,
+                border: `1px solid ${C.slateBlue}`,
                 borderRadius: 10,
                 padding: "16px 18px",
                 marginBottom: 22,
@@ -520,7 +536,7 @@ export default function App() {
                   fontWeight: 700,
                   letterSpacing: 1.3,
                   textTransform: "uppercase",
-                  color: "#1d4ed8",
+                  color: C.blue,
                   marginBottom: 10,
                 }}>
                   Safety Actions Applied
@@ -531,7 +547,7 @@ export default function App() {
                   flexDirection: "column",
                   gap: 7,
                   fontSize: 13,
-                  color: "#334155",
+                  color: C.slateDark,
                   lineHeight: 1.6,
                 }}>
                   <div>✓ {data.analysis.risk_level === "high" ? "High-risk" : "Sensitive"} wellness query detected</div>
@@ -559,12 +575,12 @@ export default function App() {
               marginBottom: 22,
             }}>
               <div style={{
-                background: "#f8fafc",
-                border: "1px solid #e2e8f0",
+                background: C.slate,
+                border: `1px solid ${C.slateBorder}`,
                 borderRadius: 999,
                 padding: "8px 14px",
                 fontSize: 12,
-                color: "#334155",
+                color: C.slateDark,
                 fontWeight: 600,
               }}>
                 {data.results.length} result{data.results.length !== 1 ? "s" : ""} retrieved
@@ -572,12 +588,12 @@ export default function App() {
 
               {data.suppressedCount > 0 && (
                 <div style={{
-                  background: "#fff7ed",
-                  border: "1px solid #fdba74",
+                  background: C.warningBg,
+                  border: `1px solid ${C.warningBorder}`,
                   borderRadius: 999,
                   padding: "8px 14px",
                   fontSize: 12,
-                  color: "#9a3412",
+                  color: C.warningText,
                   fontWeight: 600,
                 }}>
                   {data.suppressedCount} filtered for moderation
@@ -599,12 +615,12 @@ export default function App() {
               )}
 
               <div style={{
-                background: "#eff6ff",
+                background: C.blueBg,
                 border: "1px solid #93c5fd",
                 borderRadius: 999,
                 padding: "8px 14px",
                 fontSize: 12,
-                color: "#1d4ed8",
+                color: C.blue,
                 fontWeight: 600,
               }}>
                 Grounded AI overview enabled
@@ -624,28 +640,28 @@ export default function App() {
               }}>
                 <span style={{ fontSize: 14 }}>✦</span>
                 <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  letterSpacing: 1.5,
-                  color: C.primary,
-                  textTransform: "uppercase"
-                }}>
-                  Final AI Overview
-                </span>
+                  <span style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    letterSpacing: 1.5,
+                    color: C.primary,
+                    textTransform: "uppercase"
+                  }}>
+                    Final AI Overview
+                  </span>
 
-                <span style={{
-                  background: "#e8f7ee",
-                  color: C.primary,
-                  border: "1px solid #b7dfc9",
-                  borderRadius: 20,
-                  padding: "2px 10px",
-                  fontSize: 10,
-                  fontWeight: 700
-                }}>
-                  Grounded in JH Content
-                </span>
-              </div>
+                  <span style={{
+                    background: "#e8f7ee",
+                    color: C.primary,
+                    border: `1px solid ${C.borderGreen}`,
+                    borderRadius: 20,
+                    padding: "2px 10px",
+                    fontSize: 10,
+                    fontWeight: 700
+                  }}>
+                    Grounded in JH Content
+                  </span>
+                </div>
               </div>
               <div style={{ padding: "16px 18px" }}>
                 <p style={{ margin: "0 0 18px", fontSize: 15, color: C.text, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
@@ -654,8 +670,8 @@ export default function App() {
                 <div style={{
                   marginTop: 14,
                   padding: "12px 14px",
-                  background: "#f8fafc",
-                  border: "1px solid #e2e8f0",
+                  background: C.slate,
+                  border: `1px solid ${C.slateBorder}`,
                   borderRadius: 8,
                   fontSize: 12,
                   color: C.muted,
@@ -695,7 +711,7 @@ export default function App() {
                   {practitioners.length > 0 && (
                     <a href="#practitioners" style={{
                       background: C.primaryBg, color: C.primary,
-                      border: `1px solid #b7dfc9`, borderRadius: 6,
+                      border: `1px solid ${C.borderGreen}`, borderRadius: 6,
                       padding: "7px 14px", fontSize: 12, fontWeight: 600,
                       textDecoration: "none",
                     }}>
@@ -704,8 +720,8 @@ export default function App() {
                   )}
                   {protocols.length > 0 && (
                     <a href="#protocols" style={{
-                      background: "#eff6ff", color: "#1d4ed8",
-                      border: "1px solid #bfdbfe", borderRadius: 6,
+                      background: C.blueBg, color: C.blue,
+                      border: `1px solid ${C.blueBorder}`, borderRadius: 6,
                       padding: "7px 14px", fontSize: 12, fontWeight: 600,
                       textDecoration: "none",
                     }}>
@@ -714,7 +730,7 @@ export default function App() {
                   )}
                   {community.length > 0 && (
                     <a href="#community" style={{
-                      background: "#f5f3ff", color: "#7c3aed",
+                      background: "#f5f3ff", color: C.purple,
                       border: "1px solid #ddd6fe", borderRadius: 6,
                       padding: "7px 14px", fontSize: 12, fontWeight: 600,
                       textDecoration: "none",
@@ -730,11 +746,11 @@ export default function App() {
             {data.suppressedCount > 0 && (
               <div style={{
                 marginBottom: 22,
-                background: "#fff7ed",
-                border: "1px solid #fdba74",
+                background: C.warningBg,
+                border: `1px solid ${C.warningBorder}`,
                 borderRadius: 12,
                 padding: "16px 18px",
-                color: "#9a3412",
+                color: C.warningText,
                 lineHeight: 1.7,
               }}>
                 <div style={{
@@ -783,7 +799,7 @@ export default function App() {
 
                     <div>
                       <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 7 }}>Intent</div>
-                      <span style={{ background: C.primaryBg, color: C.primary, border: `1px solid #b7dfc9`, borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 600 }}>
+                      <span style={{ background: C.primaryBg, color: C.primary, border: `1px solid ${C.borderGreen}`, borderRadius: 20, padding: "3px 12px", fontSize: 12, fontWeight: 600 }}>
                         {data.analysis.intent}
                       </span>
                     </div>
@@ -805,7 +821,7 @@ export default function App() {
                         <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 7 }}>Entities</div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                           {data.analysis.entities.map((e, i) => (
-                            <span key={i} style={{ background: "#f1f5f9", color: C.text, border: "1px solid #e2e8f0", borderRadius: 4, padding: "2px 8px", fontSize: 11 }}>
+                            <span key={i} style={{ background: "#f1f5f9", color: C.text, border: `1px solid ${C.slateBorder}`, borderRadius: 4, padding: "2px 8px", fontSize: 11 }}>
                               {e}
                             </span>
                           ))}
@@ -851,8 +867,8 @@ export default function App() {
                     onClick={() => setShowRawJson(prev => !prev)}
                     style={{
                       width: "100%",
-                      background: "#f8fafc",
-                      border: "1px solid #dbeafe",
+                      background: C.slate,
+                      border: `1px solid ${C.slateBlue}`,
                       borderRadius: 8,
                       padding: "10px 12px",
                       cursor: "pointer",
@@ -863,7 +879,7 @@ export default function App() {
                       fontWeight: 700,
                       letterSpacing: 1.2,
                       textTransform: "uppercase",
-                      color: "#1d4ed8",
+                      color: C.blue,
                     }}
                   >
                     <span>Raw Grok Analysis JSON</span>
@@ -873,15 +889,15 @@ export default function App() {
                   {showRawJson && (
                     <pre style={{
                       marginTop: 10,
-                      background: "#0f172a",
-                      border: "1px solid #1e293b",
+                      background: C.codeBg,
+                      border: `1px solid ${C.codeBorder}`,
                       borderRadius: 10,
                       padding: 14,
                       fontSize: 11,
                       overflowX: "auto",
                       maxHeight: 320,
                       overflowY: "auto",
-                      color: "#e2e8f0",
+                      color: C.slateBorder,
                       lineHeight: 1.7,
                       boxShadow: "inset 0 1px 2px rgba(0,0,0,0.2)",
                     }}>
@@ -897,15 +913,15 @@ export default function App() {
                   {data.results.length} result{data.results.length !== 1 ? "s" : ""} for{" "}
                   <strong style={{ color: C.text }}>"{data.query}"</strong>
                 </div>
-                
+
                 {/* ── TYPESENSE RETRIEVAL RESULTS ── */}
                 <div style={{ marginTop: 10, marginBottom: 18 }}>
                   <button
                     onClick={() => setShowTypesenseResults(prev => !prev)}
                     style={{
                       width: "100%",
-                      background: "#eff6ff",
-                      border: "1px solid #bfdbfe",
+                      background: C.blueBg,
+                      border: `1px solid ${C.blueBorder}`,
                       borderRadius: 10,
                       padding: "12px 14px",
                       cursor: "pointer",
@@ -914,7 +930,7 @@ export default function App() {
                       justifyContent: "space-between",
                       fontSize: 12,
                       fontWeight: 700,
-                      color: "#1d4ed8",
+                      color: C.blue,
                     }}
                   >
                     <span>Typesense Retrieval Results</span>
@@ -924,8 +940,8 @@ export default function App() {
                   {showTypesenseResults && (
                     <div style={{
                       marginTop: 12,
-                      background: "#0f172a",
-                      border: "1px solid #1e293b",
+                      background: C.codeBg,
+                      border: `1px solid ${C.codeBorder}`,
                       borderRadius: 12,
                       padding: 16,
                       overflowX: "auto",
@@ -934,7 +950,7 @@ export default function App() {
                     }}>
                       <pre style={{
                         margin: 0,
-                        color: "#e2e8f0",
+                        color: C.slateBorder,
                         fontSize: 11,
                         lineHeight: 1.7,
                         whiteSpace: "pre-wrap",
@@ -956,6 +972,7 @@ export default function App() {
                     </div>
                   )}
                 </div>
+
                 {practitioners.length > 0 && (
                   <div id="practitioners">
                     <SectionHeader icon="👨‍⚕️" label="Relevant Practitioners" count={practitioners.length} />

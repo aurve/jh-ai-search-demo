@@ -352,6 +352,20 @@ export default function App() {
   return (
     <div style={{ minHeight: "100vh", background: C.bg, fontFamily: "'Segoe UI', Arial, sans-serif" }}>
 
+      <style>
+        {`
+          @keyframes spin {
+            0% {
+              transform: rotate(0deg);
+            }
+
+            100% {
+              transform: rotate(360deg);
+            }
+          }
+        `}
+      </style>
+
       {/* HEADER */}
       <div style={{
         background: `linear-gradient(135deg, ${C.primary} 0%, ${C.primaryLight} 100%)`,

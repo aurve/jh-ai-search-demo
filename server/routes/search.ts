@@ -23,13 +23,13 @@ router.post("/", async (req: Request, res: Response) => {
     let aiOverview = "";
     try {
       const context = (results as any[])
-        .map((r) => `[${r.document?.content_type}] ${r.document?.title}: ${r.document?.body}`)
+        .map((r) => `[${r.document?.content_type}] ${r.document?.name}: ${r.document?.description}`)
         .join("\n");
 
       const overviewResponse = await axios.post(
         "https://api.x.ai/v1/chat/completions",
         {
-          model: "grok-3",
+          model: "grok-4.20-reasoning",
           messages: [
             { role: "system", content: AI_OVERVIEW_PROMPT },
             { role: "user", content: `User query: "${query}"\n\nRetrieved content:\n${context}` }
@@ -47,7 +47,7 @@ router.post("/", async (req: Request, res: Response) => {
     } catch {
       aiOverview = "";
     }
-
+    
     // STEP 4 — RETURN EVERYTHING
     res.json({
       query,

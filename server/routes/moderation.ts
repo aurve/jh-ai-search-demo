@@ -17,7 +17,7 @@ router.post("/", async (req: Request, res: Response) => {
     const response = await axios.post(
       "https://api.x.ai/v1/chat/completions",
       {
-        model: "grok-3",
+        model: "grok-4.20-reasoning",
         messages: [
           { role: "system", content: MODERATION_ASSIST_PROMPT },
           { role: "user", content }

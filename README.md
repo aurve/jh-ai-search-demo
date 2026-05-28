@@ -1,14 +1,29 @@
 # Just Holistics AI Search & Moderation Demo
 
+AI-powered wellness search and moderation platform built with:
+
+* React + TypeScript frontend
+* Express + TypeScript backend
+* Typesense search infrastructure
+* Grok-powered query intelligence
+* AI-generated wellness overviews
+* Safety-focused moderation workflows
+
+This project demonstrates intelligent wellness content retrieval, grounded AI search experiences, and health-focused moderation orchestration.
+
 ---
 
 # Getting Started
 
 ## Prerequisites
 
-- Node.js 18+
-- Docker (for Typesense)
-- A Grok API key from [x.ai](https://x.ai)
+* Node.js 18+
+* Docker
+* Grok API Key from xAI
+
+---
+
+# Installation
 
 ## 1. Install dependencies
 
@@ -17,154 +32,172 @@ npm install
 cd client && npm install && cd ..
 ```
 
-## 2. Configure environment
+---
+
+## 2. Configure environment variables
 
 Create a `.env` file in the project root:
 
-```
-TYPESENSE_API_KEY=your_typesense_key
+```env
+PORT=5000
+
+TYPESENSE_HOST=your_typesense_host
+TYPESENSE_PORT=443
+TYPESENSE_PROTOCOL=https
+TYPESENSE_API_KEY=your_typesense_api_key
+COLLECTION_NAME=listings
+
 GROK_API_KEY=your_grok_api_key
 ```
 
-## 3. Start Typesense
+---
 
-```bash
-docker run -p 8108:8108 -v "$(pwd)/typesense-data:/data" typesense/typesense:0.25.2 --api-key=xyz --enable-cors --data-dir /data
-```
-
-## 4. Seed the collection
-
-```bash
-npx ts-node server/createCollection.ts
-npx ts-node server/importDocuments.ts
-```
-
-## 5. Start the server
+## 3. Start the backend
 
 ```bash
 npm run dev
 ```
 
-## 6. Start the client
+Backend runs on:
+
+```txt
+http://localhost:5000
+```
+
+---
+
+## 4. Start the frontend
 
 ```bash
 cd client && npm start
 ```
 
-The app runs at `http://localhost:3000`. The API runs at `http://localhost:5000`.
+Frontend runs on:
 
----
-
-AI-powered wellness search platform built with:
-- React + TypeScript frontend
-- Express + TypeScript backend
-- Typesense semantic search
-- Grok-powered query analysis
-- Moderation and safety workflows
-
-This project demonstrates intelligent wellness content retrieval, AI-assisted search enrichment, and safety-focused moderation UX.
+```txt
+http://localhost:3000
+```
 
 ---
 
 # Features
 
-- AI-assisted wellness search
-- Typesense-powered retrieval
-- Query intent analysis using Grok
-- AI-generated search overviews
-- Practitioner / protocol / community categorisation
-- Safety risk detection
-- Moderation suppression workflows
-- Related search recommendations
-- Saved protocol interactions
-- Structured wellness content UI
+* AI-assisted wellness search
+* Typesense-powered retrieval
+* Grok query intelligence analysis
+* AI-generated wellness overviews
+* Practitioner / protocol / community categorisation
+* Grounded AI response generation
+* Risk-aware moderation workflows
+* Safety disclaimer handling
+* Structured wellness discovery UX
+* Related search recommendations
+* Saved protocol interactions
+* Retrieval transparency panel
 
 ---
 
 # Architecture Overview
 
-## Frontend
-React + TypeScript application responsible for:
-- Search UI
-- Rendering AI overview
-- Displaying Typesense results
-- Rendering moderation/safety indicators
-- Displaying Grok query analysis
-- Categorised result sections
+## Frontend (React + TypeScript)
 
-## Backend
-Express + TypeScript API responsible for:
-- Receiving search requests
-- Calling Grok API for query analysis
-- Building enriched search queries
-- Fetching Typesense search results
-- Applying moderation filtering
-- Returning structured search responses
+Responsible for:
 
-## Search Engine
+* Search interface
+* AI overview rendering
+* Displaying Typesense retrieval results
+* Rendering moderation and safety indicators
+* Displaying Grok query analysis
+* Categorised content sections
+* Wellness content interaction workflows
+
+---
+
+## Backend (Express + TypeScript)
+
+Responsible for:
+
+* Receiving user search queries
+* Calling Grok for query intelligence analysis
+* Building expanded retrieval queries
+* Fetching Typesense search results
+* Applying moderation-aware orchestration
+* Generating grounded AI overviews
+* Returning structured search responses
+
+---
+
+## Search Layer (Typesense)
+
 Typesense handles:
-- Full-text search
-- Filtering
-- Ranking
-- Categorisation
-- Search relevance
+
+* Full-text keyword search
+* Search relevance ranking
+* Result retrieval
+* Wellness content discovery
+* Retrieval orchestration support
 
 ---
 
 # Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React + TypeScript |
-| Backend | Express + TypeScript |
-| Search Engine | Typesense |
-| AI Query Analysis | Grok |
-| HTTP Client | Axios |
-| Containerisation | Docker |
+| Layer             | Technology           |
+| ----------------- | -------------------- |
+| Frontend          | React + TypeScript   |
+| Backend           | Express + TypeScript |
+| Search Engine     | Typesense            |
+| AI Query Analysis | Grok                 |
+| HTTP Client       | Axios                |
+| Containerisation  | Docker               |
 
 ---
 
-# Typesense Schema
+# Retrieval Schema Mapping
 
-The collection schema includes:
+The implementation uses a unified wellness retrieval structure aligned to the assessment architecture.
 
-- id
-- content_type
-- title
-- body
-- tags
-- category
-- author_type
-- created_at
-- deep_link
-- moderation_status
-- risk_score
+Displayed retrieval fields include:
 
-Content types supported:
-- practitioner
-- protocol
-- community
+* id
+* content_type
+* title
+* body
+* tags
+* category
+* author_type
+* created_at
+* deep_link
+* moderation_status
+* risk_score
 
-Moderation states:
-- approved
-- requires_review
-- suppressed
+Supported content categories include:
 
-Risk scoring supports safety workflows for sensitive wellness topics.
+* practitioner
+* protocol
+* post
+* comment
+
+Moderation states include:
+
+* approved
+* flagged
+* requires_review
+
+Risk scoring supports moderation-aware wellness retrieval workflows.
 
 ---
 
-# Grok Usage Explanation
+# Grok Query Intelligence
 
 Grok is used to analyse incoming user queries before retrieval.
 
-The AI returns structured JSON including:
+The AI returns structured JSON containing:
 
-- intent
-- entities
-- risk_level
-- query_expansions
-- recommended_content_mix
+* intent
+* entities
+* risk_level
+* query_expansions
+* recommended_content_mix
 
 Example:
 
@@ -177,17 +210,82 @@ Example:
     "sleep wellness",
     "sleep protocol",
     "sleep practitioner"
-  ]
+  ],
+  "recommended_content_mix": {
+    "practitioners": 30,
+    "protocols": 40,
+    "community": 30
+  }
 }
 ```
 
+This analysis drives retrieval orchestration and AI overview generation.
+
 ---
 
-# API Key Issue
+# AI Overview Generation
 
-During implementation, the provided Grok API credentials
-appeared unavailable/inaccessible. The architecture and
-integration layer were still fully implemented and tested
-using fallback-compatible configurations.
+The platform generates grounded AI wellness overviews using:
 
---- 
+* User query
+* Grok query analysis
+* Retrieved Typesense content
+* Wellness categorisation logic
+
+The AI overview:
+
+* Uses only retrieved wellness content
+* Avoids external hallucinated information
+* Provides non-directive wellness summaries
+* Surfaces practitioners, protocols, and community discussions
+* Suggests safe next actions
+
+---
+
+# Moderation & Safety Logic
+
+The platform includes moderation-aware wellness retrieval workflows.
+
+## Ingestion-Time Moderation
+
+Content moderation workflows support:
+
+* Risk classification
+* Claim confidence analysis
+* Human review escalation
+
+High-risk wellness content may be flagged for review.
+
+---
+
+## Query-Time Safety Handling
+
+For elevated-risk queries, the system can:
+
+* Show safety disclaimers
+* Prioritise practitioner-oriented content
+* Reduce risky protocol visibility
+* Apply moderation-aware orchestration
+
+---
+
+# User Interface
+
+The demo interface includes:
+
+* Raw user query
+* Grok analysis JSON
+* Typesense retrieval results
+* Grounded AI overview
+* Categorised wellness sections
+* Moderation indicators
+* Retrieval transparency panels
+
+---
+
+# Known Limitations
+
+* Moderation workflows are demonstration-oriented and not production-grade
+* Embedding-based semantic retrieval is not implemented
+* Wellness categorisation uses heuristic orchestration logic
+* Retrieval quality depends on available indexed wellness content

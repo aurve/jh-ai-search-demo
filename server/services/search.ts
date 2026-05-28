@@ -10,13 +10,11 @@ async function searchDocuments(query: string): Promise<SearchResult> {
   const [approvedResults, suppressedResults] = await Promise.all([
     client.collections(config.typesense.collectionName).documents().search({
       q: query,
-      query_by: "title,body,tags",
-      filter_by: "moderation_status:approved"
+      query_by: "name,description,primary_category_slug"
     }),
     client.collections(config.typesense.collectionName).documents().search({
       q: query,
-      query_by: "title,body,tags",
-      filter_by: "moderation_status:requires_review",
+      query_by: "name,description,primary_category_slug",
       per_page: 0
     })
   ]);

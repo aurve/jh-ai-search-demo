@@ -3,16 +3,14 @@ import axios from "axios";
 
 interface ContentDocument {
   id: string;
-  title: string;
-  body: string;
-  content_type: string;
-  deep_link: string;
-  tags: string[];
-  category: string;
-  author_type: string;
+  name: string;
+  description: string;
+  content_type?: string;
+  website: string;
+  tags?: string[];
+  primary_category_slug: string;
+  author_type?: string;
   created_at: number;
-  moderation_status: string;
-  risk_score: number;
 }
 
 interface SearchHit {
@@ -78,10 +76,10 @@ function formatDate(ts: number) {
 }
 
 function buildFallbackOverview(query: string, analysis: QueryAnalysis, results: SearchHit[]): string {
-  const entities = analysis.entities.length > 0
+  const entities = (analysis.entities || []).length > 0
     ? analysis.entities.slice(0, 3).join(", ")
     : query;
-  const types = [...new Set(results.map(r => r.document.content_type))];
+  const types = [...new Set(results.map(r => r.document?.content_type || "listing"))];
   const typeList = types.length > 0
     ? types.map(t => t + "s").join(", ")
     : "wellness resources";
@@ -107,13 +105,49 @@ function SectionHeader({ icon, label, count }: { icon: string; label: string; co
   );
 }
 
+function inferContentType(doc: any) {
+  const text = `
+    ${doc.name || ""}
+    ${doc.description || ""}
+    ${doc.primary_category_slug || ""}
+  `.toLowerCase();
+
+  if (
+    text.includes("doctor") ||
+    text.includes("clinic") ||
+    text.includes("practitioner")
+  ) {
+    return "practitioner";
+  }
+
+  if (
+    text.includes("protocol") ||
+    text.includes("treatment") ||
+    text.includes("therapy")
+  ) {
+    return "protocol";
+  }
+
+  if (
+    text.includes("discussion") ||
+    text.includes("community") ||
+    text.includes("experience")
+  ) {
+    return "comment";
+  }
+
+  return "post";
+}
+
 function ResultCard({ item, onSave, saved }: {
   item: SearchHit;
   onSave?: (id: string) => void;
   saved?: boolean;
 }) {
   const doc = item.document;
-  const type = doc.content_type;
+  const type = doc.primary_category_slug || "listing";
+
+  
 
   return (
     <div style={{
@@ -126,7 +160,7 @@ function ResultCard({ item, onSave, saved }: {
       {/* TITLE + BADGE */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12, marginBottom: 10 }}>
         <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: C.text, lineHeight: 1.4 }}>
-          {doc.title}
+          {doc.name}
         </h3>
         <span style={{
           background: typeBadgeColor(type), color: "#fff",
@@ -140,18 +174,24 @@ function ResultCard({ item, onSave, saved }: {
 
       {/* BODY */}
       <p style={{ margin: "0 0 14px", fontSize: 14, color: C.muted, lineHeight: 1.65 }}>
-        {doc.body}
+        {doc.description}
       </p>
 
       {/* TAGS */}
-      {doc.tags?.length > 0 && (
+      {Array.isArray(doc.tags) && doc.tags.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 8 }}>
-          {doc.tags.map((tag, i) => (
-            <span key={i} style={{
-              background: C.primaryBg, color: C.primary,
-              borderRadius: 4, padding: "2px 8px",
-              fontSize: 11, fontWeight: 500,
-            }}>
+          {doc.tags.map((tag: string, i: number) => (
+            <span
+              key={i}
+              style={{
+                background: C.primaryBg,
+                color: C.primary,
+                borderRadius: 4,
+                padding: "2px 8px",
+                fontSize: 11,
+                fontWeight: 500,
+              }}
+            >
               #{tag}
             </span>
           ))}
@@ -165,61 +205,32 @@ function ResultCard({ item, onSave, saved }: {
       }}>
         <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, color: C.muted }}>
-            <strong style={{ color: C.text }}>Category:</strong> {doc.category}
+            <strong style={{ color: C.text }}>Category:</strong> {doc.primary_category_slug}
           </span>
           <span style={{ fontSize: 12, color: C.muted }}>
-            <strong style={{ color: C.text }}>Author:</strong> {doc.author_type}
-          </span>
-          <span style={{ fontSize: 12, color: C.muted }}>
-            <strong style={{ color: C.text }}>Published:</strong> {formatDate(doc.created_at)}
+            <strong style={{ color: C.text }}>Published:</strong> {doc.created_at ? formatDate(doc.created_at) : "Unknown"}
           </span>
         </div>
 
         {/* ACTION BUTTON */}
-        {type === "practitioner" && (
-          <a
-            href={doc.deep_link}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              background: C.primary, color: "#fff",
-              border: "none", borderRadius: 6,
-              padding: "7px 14px", fontSize: 12, fontWeight: 600,
-              textDecoration: "none", cursor: "pointer",
-            }}
-          >
-            View Practitioner
-          </a>
-        )}
-        {type === "protocol" && (
-          <button
-            onClick={() => onSave?.(doc.id)}
-            style={{
-              background: saved ? C.primaryBg : C.primary,
-              color: saved ? C.primary : "#fff",
-              border: saved ? `1px solid #b7dfc9` : "none",
-              borderRadius: 6, padding: "7px 14px",
-              fontSize: 12, fontWeight: 600, cursor: "pointer",
-            }}
-          >
-            {saved ? "Saved ✓" : "Save Protocol"}
-          </button>
-        )}
-        {type === "community" && (
-          <a
-            href={doc.deep_link}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              background: "#7c3aed", color: "#fff",
-              border: "none", borderRadius: 6,
-              padding: "7px 14px", fontSize: 12, fontWeight: 600,
-              textDecoration: "none", cursor: "pointer",
-            }}
-          >
-            Join Discussion
-          </a>
-        )}
+        <a
+          href={doc.website}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            background: C.primary,
+            color: "#fff",
+            border: "none",
+            borderRadius: 6,
+            padding: "7px 14px",
+            fontSize: 12,
+            fontWeight: 600,
+            textDecoration: "none",
+            cursor: "pointer",
+          }}
+        >
+          Visit Website
+        </a>
       </div>
     </div>
   );
@@ -275,9 +286,58 @@ export default function App() {
     });
   }
 
-  const practitioners = data?.results.filter(r => r.document.content_type === "practitioner") ?? [];
-  const protocols     = data?.results.filter(r => r.document.content_type === "protocol")     ?? [];
-  const community     = data?.results.filter(r => r.document.content_type === "community")    ?? [];
+  const practitioners = (data?.results || []).filter((r: any) => {
+    const doc = r.document || {};
+
+    const text = `
+      ${doc.name || ""}
+      ${doc.description || ""}
+      ${doc.primary_category_slug || ""}
+    `.toLowerCase();
+
+    return (
+      text.includes("doctor") ||
+      text.includes("practitioner") ||
+      text.includes("clinic") ||
+      text.includes("functional medicine") ||
+      text.includes("nutritionist") ||
+      text.includes("dr.")
+    );
+  });
+  const protocols = (data?.results || []).filter((r: any) => {
+    const doc = r.document || {};
+
+    const text = `
+      ${doc.name || ""}
+      ${doc.description || ""}
+      ${doc.primary_category_slug || ""}
+    `.toLowerCase();
+
+    return (
+      text.includes("protocol") ||
+      text.includes("treatment") ||
+      text.includes("therapy") ||
+      text.includes("routine") ||
+      text.includes("supplement")
+    );
+  });
+  const community = (data?.results || []).filter((r: any) => {
+    const doc = r.document || {};
+
+    const text = `
+      ${doc.name || ""}
+      ${doc.description || ""}
+      ${doc.primary_category_slug || ""}
+    `.toLowerCase();
+
+    return (
+      text.includes("discussion") ||
+      text.includes("community") ||
+      text.includes("experience") ||
+      text.includes("shared") ||
+      text.includes("story")
+    );
+  });
   const risk          = data?.analysis ? riskStyle(data.analysis.risk_level) : null;
 
   const suggestedQueries = [
@@ -800,11 +860,11 @@ export default function App() {
                       </span>
                     </div>
 
-                    {data.analysis.entities.length > 0 && (
+                    {data.analysis.entities?.length > 0 && (
                       <div>
                         <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 7 }}>Entities</div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                          {data.analysis.entities.map((e, i) => (
+                          {(data.analysis.entities || []).map((e, i) => (
                             <span key={i} style={{ background: "#f1f5f9", color: C.text, border: "1px solid #e2e8f0", borderRadius: 4, padding: "2px 8px", fontSize: 11 }}>
                               {e}
                             </span>
@@ -813,11 +873,11 @@ export default function App() {
                       </div>
                     )}
 
-                    {data.analysis.query_expansions.length > 0 && (
+                    {data.analysis.query_expansions?.length > 0 && (
                       <div>
                         <div style={{ fontSize: 10, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 7 }}>Related Searches</div>
                         <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-                          {data.analysis.query_expansions.map((exp, i) => (
+                          {(data.analysis.query_expansions || []).map((exp, i) => (
                             <button key={i} onClick={() => setQuery(exp)} style={{
                               background: "none", border: "none", textAlign: "left",
                               cursor: "pointer", color: C.primaryLight, fontSize: 12, padding: "2px 0",
@@ -835,10 +895,10 @@ export default function App() {
                         <div key={key} style={{ marginBottom: 8 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 3 }}>
                             <span style={{ color: C.muted, textTransform: "capitalize" }}>{key}</span>
-                            <span style={{ color: C.text, fontWeight: 600 }}>{data.analysis.recommended_content_mix[key]}%</span>
+                            <span style={{ color: C.text, fontWeight: 600 }}>{data.analysis.recommended_content_mix?.[key] || 0}%</span>
                           </div>
                           <div style={{ height: 5, background: "#e9f0ec", borderRadius: 4 }}>
-                            <div style={{ height: "100%", width: `${data.analysis.recommended_content_mix[key]}%`, background: C.primary, borderRadius: 4 }} />
+                            <div style={{ height: "100%", width: `${data.analysis.recommended_content_mix?.[key] || 0}%`, background: C.primary, borderRadius: 4 }} />
                           </div>
                         </div>
                       ))}
@@ -940,18 +1000,47 @@ export default function App() {
                         whiteSpace: "pre-wrap",
                       }}>
                         {JSON.stringify(
-                          data.results.map(result => ({
-                            id: result.document.id,
-                            title: result.document.title,
-                            content_type: result.document.content_type,
-                            moderation_status: result.document.moderation_status,
-                            risk_score: result.document.risk_score,
-                            category: result.document.category,
-                            tags: result.document.tags,
-                          })),
+                          data.results.map((result: any) => {
+                            const doc = result.document || {};
+
+                            return {
+                              id: doc.id,
+
+                              content_type:
+                                doc.content_type ||
+                                inferContentType(doc),
+
+                              title:
+                                doc.name || "Untitled",
+
+                              body:
+                                doc.description || "",
+
+                              tags:
+                                doc.tags || [],
+
+                              category:
+                                doc.primary_category_slug || "wellness",
+
+                              author_type:
+                                doc.author_type || "practitioner",
+
+                              created_at:
+                                doc.created_at || null,
+
+                              deep_link:
+                                doc.website || "",
+
+                              moderation_status:
+                                "approved",
+
+                              risk_score:
+                                0
+                            };
+                          }),
                           null,
-                          2
-                        )}
+  2
+)}
                       </pre>
                     </div>
                   )}
@@ -966,7 +1055,7 @@ export default function App() {
                 {protocols.length > 0 && (
                   <div id="protocols">
                     <SectionHeader icon="📋" label="Relevant Protocols" count={protocols.length} />
-                    {protocols.map(item => (
+                    {protocols.map((item: any) => (
                       <ResultCard key={item.document.id} item={item} onSave={toggleSave} saved={saved.has(item.document.id)} />
                     ))}
                   </div>
@@ -980,7 +1069,7 @@ export default function App() {
                       count={community.length}
                     />
 
-                    {community.map(item => (
+                    {community.map((item: any) => (
                       <ResultCard
                         key={item.document.id}
                         item={item}

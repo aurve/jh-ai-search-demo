@@ -54,7 +54,7 @@ async function analyzeQuery(query: string): Promise<QueryAnalysis> {
     const response = await axios.post(
       "https://api.x.ai/v1/chat/completions",
       {
-        model: "grok-3",
+        model: "grok-4.20-reasoning",
         messages: [
           { role: "system", content: QUERY_INTELLIGENCE_PROMPT },
           { role: "user", content: query }
